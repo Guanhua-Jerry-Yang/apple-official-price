@@ -16,7 +16,9 @@ $S/run_crawl.sh cfg.json
 
 看一眼 plan 是否合理：
 - `iterate` 应是 尺寸 → 芯片家族 → 核心档 → 内存 → 存储 →（以太网）这一串。颜色应在 `fixed`。
-- 纳米纹理玻璃、电源适配器、预装软件默认在 `addons`（只测差价，不进乘积）。用户明确要「玻璃也进表」时用 `addonDims` 覆盖默认列表。
+- 纳米纹理玻璃、电源适配器、预装软件、底座、鼠标/触控板、键盘形态默认在 `addons`（只测差价，不进乘积）。`addonDims` 是**追加**到默认列表；要把某个默认附加项放进乘积（如「玻璃也进表」）用 `"addonDefaults": false` 再显式写全 `addonDims`。
+- 某档不渲染的维度（iMac 10 核档标配千兆网口，没有以太网 radio）会记 INFO 并把该列留空；合表时用 `"map": {"": "标配"}` 翻成可读值。
+- `<out>_unavailable.tsv` 记录见过但 disabled 的选项（如 32GB「暂无供应」），`<out>_notes.md` 末尾列出 bootstrap 声明过却从未出现在行里的取值。
 - iPhone / iPad 这类 SKU 定价页 `iterate` 会是空或只有颜色/容量：不要点选遍历，改用 `bootstrap_skus.py <out>_structure.json` 直接读全部 SKU 价（见 `iphone.md`、`ipad.md`），再挑 2～4 个 SKU 点选核对。
 
 ## 1. 全量遍历
@@ -31,7 +33,7 @@ $S/run_crawl.sh cfg.json 2>&1 | tail -3      # 单次 Bash 上限 10 分钟：>6
 - 每读到一行就追加进 `<out>_rows.tsv`，重跑自动跳过已有行（resume）。
 - 分块：`"only":{"chassis-dimensionScreensize":["14inch"]}` 只跑 14 英寸；`"limit":30` 跑 30 行就停。分块时 `close` 留 false，最后一块再 true。
 - 速度约 3～5 s 一行：Mac mini 84 行 ≈ 6 min，MacBook Pro 57 行 ≈ 8 min（层级多）。
-- 日志 `<out>_log.txt`：`WARN` 是点选失败/维度缺失，`DRIFT` 是点选后上游自动跳档（如 MacBook Air 10-8 档点 24GB 跳到 10-10，该行按实际配置记录并标 drift=1，合表时忽略）。
+- 日志 `<out>_log.txt`：每次运行以 `=== run start ===` 分隔，结束行是 `plan done (planOnly)` 或 `crawl done`；`WARN` 是点选失败，`INFO dimension not rendered` 是该档无此维度（正常），`DRIFT` 是点选后上游自动跳档（如 MacBook Air 10-8 档点 24GB 跳到 10-10，该行按实际配置记录并标 drift=1，合表时忽略）。
 - 多个机型/站点并行：每个 cfg 不同 `space` 与 `out`，可同时起多个 `run_crawl.sh`（共用一个 ego-browser，互不干扰）。子 agent 也是这样分：一个子 agent 管一个（机型 × 站点），prompt 里给 URL、space 名、out 前缀、本手册路径即可，不要让它自己发明点选方法。
 
 ## 2. 核对

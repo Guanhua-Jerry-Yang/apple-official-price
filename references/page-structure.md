@@ -27,7 +27,7 @@
 | 核心档 | `<家族值>-processor-dimensionChip-cpuCoreCount-gpuCoreCount` | **name 带家族前缀**（如 `m5pro-processor-…`），选家族后才出现；单档家族（M6）自动勾选。MacBook Air 是 `processor-cpuCoreCount-gpuCoreCount`（无前缀） |
 | 内存 | `memory-dimensionMemory` | 16gb/24gb/… 按芯片档解锁，不可选的 disabled；另有「See pricing and changes / 查看价格和变化」按钮表示需换芯片才可选，不是 radio |
 | 存储 | `storage-dimensionCapacity` | 256gb/512gb/1tb/2tb/4tb/8tb |
-| 以太网 | `ethernet_adapter-ethernetBandwidth` | 2_5gb_per_second / 10gb_per_second（Mac mini） |
+| 以太网 | `ethernet_adapter-ethernetBandwidth`（Mac mini：2_5gb_per_second / 10gb_per_second）；`ethernet_adapter-ethernetPortCount`（iMac：0 / 1，只在 8 核档渲染，10 核档标配无 radio） | 某档不渲染时脚本留空值 |
 | 电源适配器 | `power_adapter-wattage` | 40w/35w/70w（Air）、70w/96w（Pro 部分档），+$20 / +¥120 恒定 → 附加项；固定瓦数的档位没有 radio |
 | 键盘 | `keyboard-localizationCode` | 是 `<select>` 不是 radio，不改价 → 跳过 |
 | 预装软件 | `software_final-preInstalledSoftware` / `software_logic-…` | none / final_cut_pro / logic_pro；CN、SG 页渲染，US 部分页面不渲染（DOM 里没有）→ 附加项 |
@@ -64,5 +64,6 @@
 | Mac mini | 芯片 M6 / M5 Pro 15-16 / 18-20 | M6: 16/24/32；Pro: 24/48/64 | M6: 256G–2T；Pro: 512G–8T | 10Gb 以太网（进乘积，+$100/¥750/S$150）、预装软件 | 84 |
 | MacBook Air | 13/15 英寸 × M5 10-8（仅 13"，仅 16/512）/ 10-10 | 16/24/32 | 512G–4T | 电源 35W/70W +$20；预装软件 | 25 |
 | MacBook Pro | 14/16 英寸 × M5 / M5 Pro 15-16 / 18-20 / M5 Max 18-32 / 18-40（16" 无 M5、无 Pro 15-16） | 按档 16–128GB；Max 18-32 仅 36GB | Pro/M5: 1–4T；Max: 2–8T；无 512G | 纳米纹理 +$150/¥1,125；96W 电源 +$20（仅 14" 低档）；预装软件 | 57 |
+| iMac 24" (M4) | 颜色（不改价）× 8-8 / 10-10 | 16/24（32 暂无供应） | 256G–2T | 千兆网口 +$30/¥200（8 核档加选，10 核标配）；纳米纹理 +$200/¥1,500；妙控板 +$50/¥350；数字小键盘 +$30/¥200；VESA 0 | 20 |
 
 定价异常（两站一致，已复测）：MacBook Air 13" 10-10 档只有 16GB/512GB 标配比 10-8 档贵（+$100 / +¥750），任何升配后该溢价消失。这是页面真实定价，进「定价异常」说明，不是抓取错误。

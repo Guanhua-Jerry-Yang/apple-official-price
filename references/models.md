@@ -9,7 +9,7 @@ URL 规律：美国 `https://www.apple.com/shop/…`，中国大陆 `https://www
 | Mac mini | `buy-mac/mac-mini` | 芯片 M6 / M5 Pro 15-16 / 18-20 → 内存 → 存储 → 以太网 | 84 | 预装软件 | 2026-09 预购，9/22 发售，CN/SG 限购 2 台 |
 | MacBook Air | `buy-mac/macbook-air` | 13/15 英寸 → 颜色（不改价）→ M5 10-8 / 10-10 → 内存 → 存储 | 25 | 电源 35W/70W、预装软件 | 10-8 档仅 16GB/512GB；定价异常见 page-structure.md |
 | MacBook Pro | `buy-mac/macbook-pro` | 14/16 英寸 → 颜色 → 玻璃 → M5 / M5 Pro ×2 / M5 Max ×2 → 内存 → 存储 | 57 | 纳米纹理、96W 电源、预装软件 | 16" 无 M5 与 Pro 15-16；无 512GB |
-| iMac | `buy-mac/imac` | 未抓过；预计 颜色 → 芯片档 → 内存 → 存储 → 以太网/配件 | — | 纳米纹理?、鼠标/触控板 | 先 planOnly 看结构 |
+| iMac 24" (M4) | `buy-mac/imac` | 颜色（不改价，7 色）→ `processor-cpuCoreCount-gpuCoreCount` 8-8 / 10-10（无家族层）→ 内存 16/24（32 暂无供应）→ 存储 256G–2T → `ethernet_adapter-ethernetPortCount` 0/1（仅 8-8 档有 radio，10-10 标配） | 20 | 纳米纹理 +$200/¥1,500、妙控板 +$50/¥350、数字小键盘 +$30/¥200、VESA 底座 0、预装软件（US 不渲染） | 2026-09-05 US/CN 实测 40 行核对全过；plan 自动把底座/鼠标/键盘归附加项 |
 | Mac Studio | `buy-mac/mac-studio` | 未抓过；预计 芯片 Max/Ultra 档 → 内存 → 存储 | — | — | 先 planOnly |
 | Mac Pro | `buy-mac/mac-pro` | 未抓过 | — | — | 在售状态先确认 |
 

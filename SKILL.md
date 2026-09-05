@@ -22,7 +22,7 @@ description: 去 Apple 官网（美国 apple.com、中国大陆 apple.com.cn、�
 | 美国税 | MA 州 6.25% | 其他州：改「说明与假设」D4 并注明 |
 | 汇率 | 占位 7.10 / 5.50 | 用户给实时值就填 E 列 |
 | 输出 | 追加到 `~/Documents/CC/Apple_Official_Price/Apple_Official_Price.xlsx` | 用户指定其他文件 |
-| 维度 | 尺寸/芯片/内存/存储/以太网进乘积；纳米纹理、电源、预装软件作附加项；颜色/键盘验证不改价后固定 | 「玻璃也要进表」→ `addonDims` 去掉它 |
+| 维度 | 尺寸/芯片/内存/存储/以太网进乘积；纳米纹理、电源、预装软件、底座、鼠标/触控板、键盘形态作附加项；颜色/键盘布局验证不改价后固定 | 「玻璃也要进表」→ `addonDefaults:false` + 显式 `addonDims` |
 
 ## 2. 流程
 
@@ -44,12 +44,12 @@ description: 去 Apple 官网（美国 apple.com、中国大陆 apple.com.cn、�
 - 颜色不改价：sheet 维度用 尺寸×容量（×连接方式），说明里注明「各色同价」。
 
 ### 2.4 合表
-- 写 spec.json（模板见 `references/workbook-spec.md`），`scripts/build_workbook.py spec.json`。同机型重抓会替换该 sheet，其他 sheet 不动，「说明与假设」追加一段记录。
+- 写 spec.json（模板见 `references/workbook-spec.md`），`scripts/build_workbook.py spec.json`。`workbook` 默认总表路径，用户指定或测试运行时可换任意路径。同机型重抓会替换该 sheet，其他 sheet 不动，「说明与假设」追加一段记录。
 - `keys[].map` 把 radio 值翻成可读名（`m5pro-15-16` → `M5 Pro（15核CPU/16核GPU）`；核数从 bootstrap `mainDisplayValues` 的 header 里取）。
 - 定价异常、未抓到项（如 US 页未渲染预装软件）写进 spec 的 `anomalies` / `notes`。
 
 ### 2.5 交付
-- `open -a "Microsoft Excel" <xlsx>`（不要只 `open`：Quick Look 预览会显示缓存的旧版本且不一定显示所有 sheet，用户曾因此以为数据丢了）。
+- 有人在场时 `open -a "Microsoft Excel" <xlsx>`；无人值守 / 评测运行不要 open（不要只 `open`：Quick Look 预览会显示缓存的旧版本且不一定显示所有 sheet，用户曾因此以为数据丢了）。
 - 汇报：各机型组合数、价格区间、相对基准地区的溢价区间、定价异常、未抓到项、口径与汇率假设。数字用表格，不写进句子。
 
 ## 3. 文件

@@ -1,6 +1,6 @@
 # Excel 输出规范
 
-一个总表持续追加：默认 `~/Documents/CC/Apple_Official_Price/Apple_Official_Price.xlsx`。每个机型一个 sheet；重抓同机型时**替换**该 sheet（`build_workbook.py` 自动删旧建新），「说明与假设」sheet 追加一段抓取记录。
+一个总表持续追加：默认 `~/Documents/CC/Apple_Official_Price/Apple_Official_Price.xlsx`；spec 的 `workbook` 可以指向任何路径（测试、临时任务用别的文件，不要污染总表）。每个机型一个 sheet；重抓同机型时**替换**该 sheet（`build_workbook.py` 自动删旧建新），「说明与假设」sheet 追加一段抓取记录。
 
 ## Sheet 结构
 
@@ -13,7 +13,7 @@
 
 `序号 | 维度列… | 每个地区一组 | 差额与溢价`
 
-- 维度列：尺寸、芯片、内存、存储、（以太网）——显示名由 spec 的 `keys[].map` 决定，未映射的原值直接显示（16gb、1tb）。
+- 维度列：尺寸、芯片、内存、存储、（以太网）——显示名由 spec 的 `keys[].map` 决定，未映射的原值直接显示（16gb、1tb）。某档不渲染的维度值为空字符串，用 `"map": {"": "标配"}` 翻译。
 - 每个地区一组：`<地区>官网价 (货币)`；不含税地区（US）多一列 `<地区>含税价`；非 CN 地区多一列 `<地区>折算 (RMB)`。
 - 对比列：以 `reference` 地区（默认 CN）为基准，对其他每个地区各两列：`差额 中国大陆−<地区> (RMB)`、`中国大陆相对<地区>溢价 %`。
 - 某地区没有该组合：官网价格单元格写「<地区>无此配置」，对比列留空。

@@ -6,7 +6,9 @@
 //   space      ego-browser task-space name, one per (model, region)                          (required)
 //   out        output path prefix, e.g. /path/macmini_us  -> macmini_us_rows.tsv etc.        (required)
 //   dims       explicit ordered radio names to iterate (skip auto-detection)                 (optional)
-//   addonDims  radio names measured as add-on deltas instead of multiplied into rows         (optional)
+//   addonDims  radio names measured as add-on deltas instead of multiplied into rows; ADDED to the
+//              built-in defaults (power adapter, software, display finish, stand, mouse/keyboard) unless
+//              addonDefaults:false                                                            (optional)
 //   skipDims   radio names ignored entirely                                                   (optional)
 //   fix        {radioName: value} forced before crawling (colour, finish, ...)               (optional)
 //   only       {radioName: [values]} restrict a dimension's values — for chunking long runs  (optional)
@@ -21,12 +23,13 @@ const OUT = CFG.out
 const ROWS = OUT + '_rows.tsv', ADDONS = OUT + '_addons.tsv', PLAN = OUT + '_plan.json'
 const STRUCT = OUT + '_structure.json', NOTES = OUT + '_notes.md', LOGF = OUT + '_log.txt'
 const DEFAULT_SKIP = /tradeupinline|purchase_option|dimensionPaymentType|applecare|carrier|financing|engrav|keyboard-localization|acc_|dimensionLanguage|smart_folio|pencil|^ad$/i
-const DEFAULT_ADDON = /power_adapter|software|dimensionFinish|pencil|keyboard_accessory/i
+const DEFAULT_ADDON = /power_adapter|software|dimensionFinish|pencil|keyboard_accessory|StandType|pointingDevice|keyboardFormFactor|mouse_and_track_pad/i
 const SKIP = new Set(CFG.skipDims || []); const ADDON = new Set(CFG.addonDims || [])
 const FIX = CFG.fix || {}; const ONLY = CFG.only || {}; const LIMIT = CFG.limit || Infinity
 const RESUME = CFG.resume !== false
 function L(msg) { log(msg); appendLine(LOGF, new Date().toISOString() + ' ' + msg) }
 
+appendLine(LOGF, '=== run start ' + new Date().toISOString() + (CFG.planOnly ? ' (planOnly)' : '') + ' ===')
 const task = await useOrCreateTaskSpace(CFG.space)
 L('task space ' + task.id + ' ' + CFG.space + ' -> ' + CFG.url)
 await openOrReuseTab(CFG.url, { wait: true, timeout: 45 })
@@ -82,7 +85,7 @@ if (CFG.dims) {
   for (const s of sections) {
     const f = s.formFieldName
     if (SKIP.has(f) || DEFAULT_SKIP.test(f)) { skipped.push(f); continue }
-    const isAddon = ADDON.has(f) || (!CFG.addonDims && DEFAULT_ADDON.test(f))
+    const isAddon = ADDON.has(f) || (CFG.addonDefaults !== false && DEFAULT_ADDON.test(f))
     const present = resolveName(f, st) || Object.values(childOf).includes(f) || (boot && boot.configDisplayValues && f in boot.configDisplayValues) // child tiers / collapsed config cards appear after earlier picks
     if (!present) { (isAddon ? notRendered : unknown).push(f); continue }
     if (isAddon) { addons.push(f); continue }
@@ -103,7 +106,7 @@ plan.basePrices = boot && boot.mainDisplayValues && boot.mainDisplayValues.price
   ? Object.fromEntries(Object.entries(boot.mainDisplayValues.prices).map(([k, v]) => [k, v.amount ?? v.seoPrice ?? (v.currentPrice && v.currentPrice.raw_amount)])) : null
 fs.writeFileSync(PLAN, JSON.stringify(plan, null, 1))
 L('plan iterate=' + JSON.stringify(plan.iterate) + ' fixed=' + JSON.stringify(plan.fixed) + ' addons=' + JSON.stringify(plan.addons) + ' unknown=' + JSON.stringify(plan.unknown || []))
-if (CFG.planOnly) { L('planOnly — done'); await completeTaskSpace(CFG.space, { keep: false }); process.exit(0) }
+if (CFG.planOnly) { L('plan done (planOnly)'); await completeTaskSpace(CFG.space, { keep: false }); process.exit(0) }
 
 // ---------- 2. crawl ----------
 const DIMS = plan.iterate
@@ -112,6 +115,8 @@ if (!fileExists(ROWS) || !RESUME) fs.writeFileSync(ROWS, header + '\n')
 const done = new Set(readLines(ROWS).slice(1).map(l => l.split('\t').slice(0, DIMS.length).join('|')))
 L('existing rows: ' + done.size)
 let written = 0
+const seenMissing = new Set(), seenUnavail = new Set()
+const UNAVAIL = OUT + '_unavailable.tsv'
 
 // Fixed dimensions (colour etc.) may sit behind an iterated one (MacBook Air: colour appears after size),
 // so this is re-applied at every level; it only acts on radios that are present, enabled and not yet set.
@@ -128,6 +133,8 @@ async function valuesWithRetry(name) {
   for (let k = 0; k < 4; k++) {
     await expandFor(name)
     const s = await getState(); let v = values(s, name)
+    for (const r of s.radios) if (r.name === name && r.disabled && !seenUnavail.has(name + '=' + r.value)) { // e.g. 32GB "Currently unavailable"
+      seenUnavail.add(name + '=' + r.value); if (!fileExists(UNAVAIL)) appendLine(UNAVAIL, 'dimension\tvalue\tlabel\tseen_at'); appendLine(UNAVAIL, [name, r.value, r.label, s.url].join('\t')) }
     if (ONLY[name] || ONLY[name.split('-').slice(1).join('-')]) { const allow = ONLY[name] || ONLY[name.split('-').slice(1).join('-')]; v = v.filter(x => allow.includes(x)) }
     if (v.length) return { s, v }
     await wait(1.5) // after a chip switch, memory radios are briefly all disabled
@@ -152,7 +159,7 @@ async function crawl(level, path) {
   await applyFixed()
   const field = DIMS[level]
   const name = resolveName(field, await getState())
-  if (!name) { L('WARN dimension not on page: ' + field + ' at ' + JSON.stringify(path)); if (level === DIMS.length - 1) { const s = await getState(); await writeRow(path, s, await readTotal(), false) } else await crawl(level + 1, path); return }
+  if (!name) { const k = field + '@' + JSON.stringify(path.slice(0, 1)); if (!seenMissing.has(k)) { seenMissing.add(k); L('INFO dimension not rendered here (standard/fixed on this tier): ' + field + ' at ' + JSON.stringify(path)) } if (level === DIMS.length - 1) { const s = await getState(); await writeRow(path, s, await readTotal(), false) } else await crawl(level + 1, path); return }
   const { v: vals } = await valuesWithRetry(name)
   if (!vals.length) { L('WARN no enabled values for ' + name + ' at ' + JSON.stringify(path)); return }
   for (const val of vals) {
@@ -182,7 +189,12 @@ if (plan.addons.length && written > 0) {
   for (const f of plan.addons) {
     const s0 = await getState(); const name = resolveName(f, s0); if (!name) { L('addon not on page: ' + f); continue }
     await expandFor(name)
-    const s = await getState(); const def = checkedValue(s, name); const base = await readTotal(); const baseAmt = parseAmount(base)
+    const s = await getState()
+    // default = checked value; when nothing is checked (iMac mouse/keyboard) use the "Included"/"No thanks" option, else the first
+    const vals0 = values(s, name)
+    const def = checkedValue(s, name) || vals0.find(v => /Included|已含|No,? thanks|不需要|none|standard|标准|已包含/i.test(labelOf(s, name, v) + ' ' + v)) || vals0[0]
+    if (def && checkedValue(s, name) !== def) { await pickPriced(name, def) }
+    const base = await readTotal(); const baseAmt = parseAmount(base)
     const ctx = DIMS.map(d => { const n = resolveName(d, s); return n ? checkedValue(s, n) : '' }).join('|')
     for (const v of values(s, name)) {
       if (v === def) continue
@@ -193,6 +205,10 @@ if (plan.addons.length && written > 0) {
     }
   }
 }
-fs.appendFileSync(NOTES, `\n## run summary\nrows total ${done.size}, new this run ${written}, dims ${JSON.stringify(DIMS)}\n`)
+{ // values declared in bootstrap but never selected in any row (disabled / unavailable / gated)
+  const seenVals = {}; for (const l of readLines(ROWS).slice(1)) l.split('\t').slice(0, DIMS.length).forEach((v, i) => (seenVals[DIMS[i]] = seenVals[DIMS[i]] || new Set()).add(v))
+  const missing = []
+  for (const f of DIMS) { const cdv = boot && ((boot.configDisplayValues || {})[f] || (boot.mainDisplayValues || {})[f]); const declared = cdv && cdv.variantOrder; if (declared) for (const v of declared) if (!(seenVals[f] || new Set()).has(v)) missing.push(f + '=' + v) }
+  fs.appendFileSync(NOTES, `\n## run summary\nrows total ${done.size}, new this run ${written}, dims ${JSON.stringify(DIMS)}\n` + (missing.length ? `\n## declared in bootstrap but never selectable in this crawl (check ${UNAVAIL})\n` + missing.map(m => '- ' + m).join('\n') + '\n' : '')) }
 if (CFG.close) { await completeTaskSpace(CFG.space, { keep: false }); L('task space closed') }
-L('done')
+L('crawl done')
