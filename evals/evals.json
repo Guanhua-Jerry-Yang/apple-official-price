@@ -1,0 +1,23 @@
+{
+  "skill_name": "apple-official-price",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我去苹果官网看一下 iMac 现在各个配置的价格，美国和中国都要，做成 Excel 对比表",
+      "expected_output": "新建（或追加到）总表工作簿一个「iMac 对比」sheet：每个 芯片×内存×存储（×其他价格维度）组合一行，含美国官网价、MA 含税价、折算 RMB、中国价、差额、溢价%；附加项差价小表；说明与假设 sheet 有来源 URL、日期、口径；所有行通过加法核对；用 Excel 打开并给出组合数、价格区间、溢价区间、异常与未抓到项的汇报",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "把 Mac Studio 也加进 ~/Documents/CC/Apple_Official_Price/Apple_Official_Price.xlsx，美国、中国、新加坡三站",
+      "expected_output": "已有工作簿其他 sheet 不动，新增「Mac Studio 对比」sheet，三个地区各自的官网价列 + 折算列 + 对中国的差额/溢价列；说明与假设 sheet 追加 Mac Studio 抓取记录；新加坡价含 GST 口径标注",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "iPhone 17 Pro 全系列不绑运营商的价格，美国 vs 中国，按加州税率算含税，给我表",
+      "expected_output": "识别为 SKU 定价页，从 bootstrap 读全部 SKU（US 只保留 UNLOCKED/US），用 2～4 个 SKU 点选核对；sheet 维度为 屏幕尺寸×容量（颜色不改价，说明中注明）；说明与假设中 US 税率改为加州并注明；报告 US 页 carrier 折扣口径",
+      "files": []
+    }
+  ]
+}

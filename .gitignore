@@ -1,0 +1,10 @@
+# runtime outputs never belong in the repo
+*.log
+*_rows.tsv
+*_addons.tsv
+*_structure.json
+*_plan.json
+*_notes.md
+*.xlsx
+.DS_Store
+__pycache__/
